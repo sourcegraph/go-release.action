@@ -2,6 +2,13 @@
 
 set -eux
 
+EXT=''
+if [ $GOOS == 'windows' ]; then
+	EXT='.exe'
+fi
+
+export EXECUTABLE_PATH=$(mktemp)${EXT}
+
 /build.sh
 
 EVENT_DATA=$(cat $GITHUB_EVENT_PATH)
@@ -18,7 +25,7 @@ if [ $GOOS == 'windows' ]; then
   EXT='.exe'
 fi
 
-tar cvfz tmp.tgz "${PROJECT_NAME}${EXT}"
+tar cvfz tmp.tgz $EXECUTABLE_PATH
 CHECKSUM=$(md5sum tmp.tgz | cut -d ' ' -f 1)
 
 curl \
