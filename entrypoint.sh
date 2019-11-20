@@ -7,7 +7,9 @@ if [ $GOOS == 'windows' ]; then
 	EXT='.exe'
 fi
 
-export EXECUTABLE_PATH=$(mktemp)${EXT}
+export TMPDIR=$(mktemp -d)
+export EXECUTABLE_NAME=docsite${EXT}
+export EXECUTABLE_PATH=${TMPDIR}/${EXECUTABLE_NAME}
 
 /build.sh
 
@@ -18,6 +20,8 @@ UPLOAD_URL=${UPLOAD_URL/\{?name,label\}/}
 RELEASE_NAME=$(echo $EVENT_DATA | jq -r .release.tag_name)
 PROJECT_NAME=$(basename $GITHUB_REPOSITORY)
 NAME="${PROJECT_NAME}_${RELEASE_NAME}_${GOOS}_${GOARCH}"
+
+cd $TMPDIR
 
 curl \
   -X POST \
@@ -32,7 +36,7 @@ curl \
   -H "Authorization: Bearer ${GITHUB_TOKEN}" \
   "${UPLOAD_URL}?name=${NAME}${EXT}.md5"
 
-tar cvfz tmp.tgz $EXECUTABLE_PATH
+tar cvfz tmp.tgz $EXECUTABLE_NAME
 curl \
 	-X POST \
 	--data-binary @tmp.tgz \
